@@ -1,0 +1,17 @@
+{
+	"name": "sql_dwh_transporte",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sql-tarea2dwh-8736.database.windows.net",
+			"database": "dw_tarea2dwh",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "aiis",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQEVFNDJERkZDLTJENjgtNDk1Qy1BODk3LUJBMDg4NTAwRjRBQV9kZGJmZTAxYi02ZjMyLTRlZjQtYjNmYS1mYzg0N2Y4ZmNmN2MiDQp9"
+		}
+	}
+}

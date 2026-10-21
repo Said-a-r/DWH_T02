@@ -1,0 +1,10 @@
+{
+	"name": "adf-tarea2dwh-us-8736",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus"
+}

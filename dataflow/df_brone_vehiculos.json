@@ -142,8 +142,8 @@
 				"          VehiculoId = nro_bus,",
 				"          Placa = placa,",
 				"          TipoVehiculo = tipo_bus,",
-				"          CapacidadVehiculo = capacidad,",
-				"          VIgenciaDesde = fecha_desde,",
+				"          CapacidadEfectiva = capacidad,",
+				"          VigenciaDesde = fecha_desde,",
 				"          VigenciaHasta = fecha_hasta,",
 				"          Estado = estado",
 				"     ),",
@@ -171,7 +171,15 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          VehiculoId,",
+				"          Placa,",
+				"          TipoVehiculo,",
+				"          CapacidadEfectiva,",
+				"          VigenciaHasta,",
+				"          Estado",
+				"     )) ~> sink1"
 			]
 		}
 	}

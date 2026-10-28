@@ -177,6 +177,7 @@
 				"          Placa,",
 				"          TipoVehiculo,",
 				"          CapacidadEfectiva,",
+				"          VigenciaDesde,",
 				"          VigenciaHasta,",
 				"          Estado",
 				"     )) ~> sink1"

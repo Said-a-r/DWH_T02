@@ -15,8 +15,29 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dw_silver_rutas_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          AnioFuente as string,",
@@ -32,7 +53,84 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> source1"
+				"     format: 'table') ~> source1",
+				"source1 derive(CodigoRuta = iif(isNull(CodigoRuta) || trim(CodigoRuta) == '', iif(regexMatch(upper(NombreRuta), `^(R-?|RUTA\\s*)(\\d{1,2})(-[NS])?`), concat('R-', lpad(regexExtract(upper(NombreRuta), `^(?:R-?|RUTA\\s*)(\\d{1,2})`, 1), 2, '0'), iif(regexMatch(upper(NombreRuta), `R12-[NS]`), regexExtract(upper(NombreRuta), `(-[NS])`, 1), '')), CodigoRuta), iif(regexMatch(upper(trim(CodigoRuta)), `^(R-?|RUTA\\s*)?\\d{1,2}(-[NS])?$`), concat('R-', lpad(regexExtract(upper(trim(CodigoRuta)), `(\\d{1,2})`, 1), 2, '0'), iif(regexMatch(upper(trim(CodigoRuta)), `-[NS]$`), regexExtract(upper(trim(CodigoRuta)), `(-[NS])$`, 1), '')), upper(trim(CodigoRuta)))),",
+				"          Estado = upper(Estado),",
+				"          NombreRuta = iif(",
+				"    regexMatch(",
+				"        upper(NombreRuta),",
+				"        `^(RUTA *|R-? *)[0-9]{1,3}.*`",
+				"    ),",
+				"    concat(",
+				"        'Ruta ',",
+				"        regexExtract(",
+				"            upper(NombreRuta),",
+				"            `^(?:RUTA *|R-? *)([0-9]{1,3})`,",
+				"            1",
+				"        ),",
+				"        iif(",
+				"            regexMatch(",
+				"                upper(NombreRuta),",
+				"                `.*\\b(NORTE|SUR)\\b.*`",
+				"            ),",
+				"            concat(",
+				"                ' ',",
+				"                iif(",
+				"                    regexExtract(",
+				"                        upper(NombreRuta),",
+				"                        `^.*?\\b(NORTE|SUR)\\b`,",
+				"                        1",
+				"                    ) == 'NORTE',",
+				"                    'Norte',",
+				"                    'Sur'",
+				"                )",
+				"            ),",
+				"            ''",
+				"        )",
+				"    ),",
+				"    NombreRuta",
+				")) ~> derivedColumn1",
+				"derivedColumn1 derive(RutaHistoricaId = iif(!isNull(RutaHistoricaId) && regexMatch(upper(trim(RutaHistoricaId)), `^RH-\\d{2}(-[NS]|-NEW)?$`), upper(trim(RutaHistoricaId)), iif(regexMatch(CodigoRuta, `^R-\\d{2}(-[NS])?$`), iif(CodigoRuta == 'R-07' && regexMatch(upper(NombreRuta), `PARQUE INDUSTRIAL`), 'RH-07-NEW', concat('RH-', substring(CodigoRuta, 3, 2), iif(regexMatch(CodigoRuta, `-[NS]$`), substring(CodigoRuta, 5, 2), ''))), RutaHistoricaId)),",
+				"          VigenciaDesde = iif(regexMatch(VigenciaDesde, `^\\d{4}-\\d{2}-\\d{2}$`), VigenciaDesde, iif(regexMatch(VigenciaDesde, `^\\d{2}/\\d{2}/\\d{4}$`), toString(toDate(VigenciaDesde, 'dd/MM/yyyy'), 'yyyy-MM-dd'), iif(regexMatch(VigenciaDesde, `^\\d{5}$`), toString(addDays(toDate('1899-12-30', 'yyyy-MM-dd'), toInteger(VigenciaDesde)), 'yyyy-MM-dd'), iif(regexMatch(VigenciaDesde, `(?i)^CONVERT\\s*\\(\\s*DATE\\s*,`), regexExtract(VigenciaDesde, `(?i)'(\\d{4}-\\d{2}-\\d{2})'`, 1), VigenciaDesde)))),",
+				"          VigenciaHasta = iif(regexMatch(VigenciaHasta, `^\\d{4}-\\d{2}-\\d{2}$`), VigenciaHasta, iif(regexMatch(VigenciaHasta, `^\\d{2}/\\d{2}/\\d{4}$`), toString(toDate(VigenciaHasta, 'dd/MM/yyyy'), 'yyyy-MM-dd'), iif(regexMatch(VigenciaHasta, `^\\d{5}$`), toString(addDays(toDate('1899-12-30', 'yyyy-MM-dd'), toInteger(VigenciaHasta)), 'yyyy-MM-dd'), iif(regexMatch(VigenciaHasta, `(?i)^CONVERT\\s*\\(\\s*DATE\\s*,`), regexExtract(VigenciaHasta, `(?i)'(\\d{4}-\\d{2}-\\d{2})'`, 1), VigenciaHasta))))) ~> derivedColumn2",
+				"derivedColumn2 derive(AnioFuente = iif(isNull(AnioFuente) || trim(AnioFuente) == '', toShort('2025'), toShort(AnioFuente)),",
+				"          VigenciaDesde = toDate(VigenciaDesde, 'yyyy-MM-dd'),",
+				"          VigenciaHasta = toDate(VigenciaHasta, 'yyyy-MM-dd')) ~> derivedColumn3",
+				"derivedColumn3 aggregate(groupBy(AnioFuente,",
+				"          RutaHistoricaId),",
+				"     each(match(name!='AnioFuente'&&name!='RutaHistoricaId'), $$ = first($$))) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          AnioFuente as string,",
+				"          RutaHistoricaId as string,",
+				"          CodigoRuta as string,",
+				"          NombreRuta as string,",
+				"          Origen as string,",
+				"          Destino as string,",
+				"          VigenciaDesde as string,",
+				"          VigenciaHasta as string,",
+				"          Estado as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          AnioFuente,",
+				"          RutaHistoricaId,",
+				"          CodigoRuta,",
+				"          NombreRuta,",
+				"          Origen,",
+				"          Destino,",
+				"          VigenciaDesde,",
+				"          VigenciaHasta,",
+				"          Estado",
+				"     )) ~> sink1"
 			]
 		}
 	}

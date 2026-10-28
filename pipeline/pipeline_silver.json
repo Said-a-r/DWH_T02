@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "df_silver_demanda_paradas",
+						"referenceName": "df_silver_rutas",
 						"type": "DataFlowReference"
 					},
 					"compute": {

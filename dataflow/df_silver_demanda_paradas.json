@@ -30,6 +30,9 @@
 				},
 				{
 					"name": "derivedColumn2"
+				},
+				{
+					"name": "derivedColumn3"
 				}
 			],
 			"scriptLines": [
@@ -51,12 +54,15 @@
 				"     format: 'table') ~> source1",
 				"source1 derive(FechaServicio = iif(regexMatch(trim(replace(replace(FechaServicio, 'N\\'', ''), '\\'', '')), '^CONVERT.*'), regexExtract(replace(replace(FechaServicio, 'N\\'', ''), '\\'', ''), '(?i)CONVERT\\\\s*\\\\(\\\\s*DATE\\\\s*,\\\\s*N?\\'([^\\']+)\\'\\\\s*,\\\\s*23\\\\s*\\\\)', 1), iif(regexMatch(trim(replace(replace(FechaServicio, 'N\\'', ''), '\\'', '')), '^\\\\d+$'), toString(addDays(toDate('1899-12-30', 'yyyy-MM-dd'), toInteger(trim(replace(replace(FechaServicio, 'N\\'', ''), '\\'', '')))), 'yyyy-MM-dd'), iif(regexMatch(trim(replace(replace(FechaServicio, 'N\\'', ''), '\\'', '')), '^\\\\d{2}/\\\\d{2}/\\\\d{4}$'), toString(toDate(trim(replace(replace(FechaServicio, 'N\\'', ''), '\\'', '')), 'dd/MM/yyyy'), 'yyyy-MM-dd'), trim(replace(replace(FechaServicio, 'N\\'', ''), '\\'', '')))))) ~> derivedColumn1",
 				"derivedColumn1 derive(AnioFuente = iif(regexMatch(trim(AnioFuente), '^\\\\d{4}$'), trim(AnioFuente), iif(regexMatch(FechaServicio, '^\\\\d{4}-'), regexExtract(FechaServicio, '^(\\\\d{4})-', 1), toString(null()))),",
-				"          DemandaId = iif(isNull(DemandaId) || trim(replace(replace(DemandaId, 'N\\'', ''), '\\'', '')) == '', concat('DM-', toString(AnioFuente), '-', regexReplace(regexReplace(RutaHistoricaId, '-', ''), '\\\\s', ''), '-', lpad(regexReplace(ParadaHistoricaId, 'P', ''), 3, '0'), '-', regexReplace(FechaServicio, '-', '')), iif(regexMatch(upper(trim(replace(replace(DemandaId, 'N\\'', ''), '\\'', ''))), '^DM-\\\\d{4}-\\\\d{5}$'), upper(trim(replace(replace(DemandaId, 'N\\'', ''), '\\'', ''))), toString(null()))),",
 				"          RutaHistoricaId = iif(upper(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', ''))) == 'RH-07-NEW', 'RH-07', iif(regexMatch(upper(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', ''))), '^RH?-?\\\\d{1,2}(-[SN])?$'), concat('RH-', lpad(regexExtract(upper(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', ''))), 'RH?-?(\\\\d{1,2})', 1), 2, '0'), coalesce(regexExtract(upper(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', ''))), '(RH?-?\\\\d{1,2})(-[SN])$', 2), '')), iif(regexMatch(upper(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', ''))), '^RUTA\\\\s+\\\\d{1,2}$'), concat('RH-', lpad(regexExtract(upper(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', ''))), 'RUTA\\\\s+(\\\\d{1,2})', 1), 2, '0')), iif(regexMatch(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', '')), '^\\\\d{1,2}$'), concat('RH-', lpad(trim(replace(replace(RutaHistoricaId, 'N\\'', ''), '\\'', '')), 2, '0')), toString(null()))))),",
 				"          ParadaHistoricaId = iif(upper(trim(replace(replace(ParadaHistoricaId, 'N\\'', ''), '\\'', ''))) == 'P220-MC-NEW', 'P220', iif(regexMatch(upper(trim(replace(replace(ParadaHistoricaId, 'N\\'', ''), '\\'', ''))), '^P\\\\d{3}$'), upper(trim(replace(replace(ParadaHistoricaId, 'N\\'', ''), '\\'', ''))), toString(null()))),",
 				"          Franja = trim(replace(replace(Franja, 'N\\'', ''), '\\'', '')),",
 				"          Metodo = iif(in(array('VALIDACION_TARJETA', 'CONTEO_MANUAL', 'SENSOR', 'MEDIDO', 'NO_MEDIDO', 'ESTIMACION'), upper(trim(replace(replace(Metodo, 'N\\'', ''), '\\'', '')))), upper(trim(replace(replace(Metodo, 'N\\'', ''), '\\'', ''))), toString(null()))) ~> derivedColumn2",
-				"derivedColumn2 sink(allowSchemaDrift: true,",
+				"derivedColumn2 derive(DemandaId = iif(isNull(DemandaId) || trim(replace(replace(DemandaId, 'N\\'', ''), '\\'', '')) == '', concat('DM-', toString(AnioFuente), '-', regexReplace(regexReplace(RutaHistoricaId, '-', ''), '\\\\s', ''), '-', lpad(regexReplace(ParadaHistoricaId, 'P', ''), 3, '0'), '-', regexReplace(FechaServicio, '-', '')), iif(regexMatch(upper(trim(replace(replace(DemandaId, 'N\\'', ''), '\\'', ''))), '^DM-\\\\d{4}-\\\\d{5}$'), upper(trim(replace(replace(DemandaId, 'N\\'', ''), '\\'', ''))), toString(null()))),",
+				"          ValidacionesTarjeta = iif(regexMatch(trim(replace(replace(ValidacionesTarjeta, 'N\\'', ''), '\\'', '')), '^\\\\d+$'), trim(replace(replace(ValidacionesTarjeta, 'N\\'', ''), '\\'', '')), '0'),",
+				"          Descensos = iif(regexMatch(trim(replace(replace(Descensos, 'N\\'', ''), '\\'', '')), '^\\\\d+$'), trim(replace(replace(Descensos, 'N\\'', ''), '\\'', '')), '0'),",
+				"          DemandaNoAtendida = iif(regexMatch(trim(replace(replace(DemandaNoAtendida, 'N\\'', ''), '\\'', '')), '^\\\\d+$'), trim(replace(replace(DemandaNoAtendida, 'N\\'', ''), '\\'', '')), '0')) ~> derivedColumn3",
+				"derivedColumn3 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          AnioFuente as string,",

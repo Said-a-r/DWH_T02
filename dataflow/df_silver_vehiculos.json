@@ -36,6 +36,9 @@
 				},
 				{
 					"name": "aggregate1"
+				},
+				{
+					"name": "Modificarfila1"
 				}
 			],
 			"scriptLines": [
@@ -94,7 +97,8 @@
 				"derivedColumn3 aggregate(groupBy(AnioFuente,",
 				"          VehiculoId),",
 				"     each(match(name!='AnioFuente'&&name!='VehiculoId'), $$ = first($$))) ~> aggregate1",
-				"aggregate1 sink(allowSchemaDrift: false,",
+				"aggregate1 alterRow(upsertIf(true())) ~> Modificarfila1",
+				"Modificarfila1 sink(allowSchemaDrift: false,",
 				"     validateSchema: false,",
 				"     input(",
 				"          AnioFuente as string,",
@@ -107,9 +111,10 @@
 				"          Estado as string",
 				"     ),",
 				"     deletable:false,",
-				"     insertable:true,",
+				"     insertable:false,",
 				"     updateable:false,",
-				"     upsertable:false,",
+				"     upsertable:true,",
+				"     keys:['AnioFuente','VehiculoId'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",

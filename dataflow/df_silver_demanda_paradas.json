@@ -36,6 +36,9 @@
 				},
 				{
 					"name": "derivedColumn4"
+				},
+				{
+					"name": "Modificarfila1"
 				}
 			],
 			"scriptLines": [
@@ -99,7 +102,8 @@
 				"          DemandaNoAtendida = iif(isNull(DemandaNoAtendida) || trim(DemandaNoAtendida) == '', 0, iif(regexMatch(trim(DemandaNoAtendida), `^[0-9]+$`), toInteger(DemandaNoAtendida), 0))) ~> derivedColumn2",
 				"derivedColumn2 derive(FechaServicio = iif(isDate(FechaServicio, 'yyyy-MM-dd'), toDate(FechaServicio, 'yyyy-MM-dd'), toDate(null()))) ~> derivedColumn3",
 				"derivedColumn3 derive(DemandaId = iif(isNull(DemandaId) || trim(DemandaId) == '', concat('DM-', toString(AnioFuente), '-', substring(sha2(256, AnioFuente, FechaServicio, RutaHistoricaId, ParadaHistoricaId, Franja, ValidacionesTarjeta, Descensos, DemandaNoAtendida, Metodo), 1, 20)), DemandaId)) ~> derivedColumn4",
-				"derivedColumn4 sink(allowSchemaDrift: true,",
+				"derivedColumn4 alterRow(upsertIf(true())) ~> Modificarfila1",
+				"Modificarfila1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          AnioFuente as string,",
@@ -114,9 +118,10 @@
 				"          Metodo as string",
 				"     ),",
 				"     deletable:false,",
-				"     insertable:true,",
+				"     insertable:false,",
 				"     updateable:false,",
-				"     upsertable:false,",
+				"     upsertable:true,",
+				"     keys:['AnioFuente','DemandaId'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",

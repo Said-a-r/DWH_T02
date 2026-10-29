@@ -45,6 +45,9 @@
 				},
 				{
 					"name": "Modificarfila1"
+				},
+				{
+					"name": "filter1"
 				}
 			],
 			"scriptLines": [
@@ -65,7 +68,7 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> source1",
-				"source1 derive(AnioFuente = coalesce(toString(byName('AnioFuente')), toString(byName('anio_fuente'))),",
+				"filter1 derive(AnioFuente = coalesce(toString(byName('AnioFuente')), toString(byName('anio_fuente'))),",
 				"          ViajeId = coalesce(toString(byName('ViajeId')), toString(byName('id_viaje'))),",
 				"          RutaHistoricaId = coalesce(toString(byName('RutaHistoricaId')), toString(byName('cod_ruta'))),",
 				"          VehiculoId = coalesce(toString(byName('VehiculoId')), toString(byName('nro_bus'))),",
@@ -107,6 +110,11 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
 				"select1 alterRow(upsertIf(true())) ~> Modificarfila1",
+				"source1 filter(isNull(ViajeId) ||",
+				"(",
+				"    upper(trim(ViajeId)) != 'TOTAL_OPERACION' &&",
+				"    upper(trim(ViajeId)) != 'TOTAL_CANCELADOS'",
+				")) ~> filter1",
 				"Modificarfila1 sink(allowSchemaDrift: false,",
 				"     validateSchema: false,",
 				"     input(",

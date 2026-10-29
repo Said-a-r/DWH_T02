@@ -47,6 +47,15 @@
 			],
 			"transformations": [
 				{
+					"name": "derivedColumnCsv"
+				},
+				{
+					"name": "derivedColumn2022"
+				},
+				{
+					"name": "derivedColumn2023"
+				},
+				{
 					"name": "select1"
 				},
 				{
@@ -116,7 +125,17 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source4",
-				"source1 select(mapColumn(",
+				"source1 derive(fecha_desde = coalesce(toString(byName('fecha_desde')), toString(byName('VigenciaDesde'))),",
+				"          fecha_hasta = coalesce(toString(byName('fecha_hasta')), toString(byName('VigenciaHasta'))),",
+				"          AnioFuente = toString(null())) ~> derivedColumnCsv",
+				"source3 derive(fecha_desde = coalesce(toString(byName('fecha_desde')), toString(byName('VigenciaDesde'))),",
+				"          fecha_hasta = coalesce(toString(byName('fecha_hasta')), toString(byName('VigenciaHasta'))),",
+				"          AnioFuente = toString(null())) ~> derivedColumn2022",
+				"source4 derive(fecha_desde = coalesce(toString(byName('fecha_desde')), toString(byName('VigenciaDesde'))),",
+				"          fecha_hasta = coalesce(toString(byName('fecha_hasta')), toString(byName('VigenciaHasta'))),",
+				"          AnioFuente = toString(null())) ~> derivedColumn2023",
+				"derivedColumnCsv select(mapColumn(",
+				"          AnioFuente,",
 				"          VehiculoId = nro_bus,",
 				"          Placa = placa,",
 				"          TipoVehiculo = tipo_bus,",
@@ -127,7 +146,8 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
-				"source3 select(mapColumn(",
+				"derivedColumn2022 select(mapColumn(",
+				"          AnioFuente,",
 				"          VehiculoId = nro_bus,",
 				"          Placa = placa,",
 				"          TipoVehiculo = tipo_bus,",
@@ -138,7 +158,8 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select2",
-				"source4 select(mapColumn(",
+				"derivedColumn2023 select(mapColumn(",
+				"          AnioFuente,",
 				"          VehiculoId = nro_bus,",
 				"          Placa = placa,",
 				"          TipoVehiculo = tipo_bus,",
@@ -152,7 +173,7 @@
 				"select1, source2 union(byName: true)~> union1",
 				"union1, select2 union(byName: true)~> union2",
 				"union2, select3 union(byName: true)~> union3",
-				"union3 sink(allowSchemaDrift: true,",
+				"union3 sink(allowSchemaDrift: false,",
 				"     validateSchema: false,",
 				"     input(",
 				"          AnioFuente as string,",
@@ -173,6 +194,7 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
+				"          AnioFuente,",
 				"          VehiculoId,",
 				"          Placa,",
 				"          TipoVehiculo,",
